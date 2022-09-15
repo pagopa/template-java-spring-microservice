@@ -6,6 +6,8 @@ TODO: add a description
 
 TODO: generate a index with this tool: https://ecotrust-canada.github.io/markdown-toc/
 
+TODO: resolve all the TODOs in this template
+
 ---
 ## Api Documentation 📖
 See the [OpenApi 3 here.](TODO set your url)
