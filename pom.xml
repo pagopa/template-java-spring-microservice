@@ -10,10 +10,10 @@
     </parent>
 
     <groupId>it.gov.pagopa</groupId>
-    <artifactId>microservice</artifactId>
+    <artifactId>microservice</artifactId> <!--TODO: set your artifactId-->
     <version>0.0.1</version>
-    <name>your-project-name</name> <!--TODO set your name-->
-    <description>Your description</description> <!--TODO set your description-->
+    <name>Your project name</name> <!--TODO: set your name-->
+    <description>Your description</description> <!--TODO: set your description-->
 
     <properties>
         <java.version>11</java.version>

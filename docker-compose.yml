@@ -2,7 +2,7 @@ version: '2'
 
 services:
   app:
-    image: 'microservice:latest' # TODO set your name
+    image: 'microservice:latest' # TODO: set your name
     build:
       context: .
     container_name: app

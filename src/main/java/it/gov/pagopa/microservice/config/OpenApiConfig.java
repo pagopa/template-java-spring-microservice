@@ -14,12 +14,15 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import java.util.Collections;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 
 import static it.gov.pagopa.microservice.util.Constants.HEADER_REQUEST_ID;
 
 @Configuration
-public class SwaggerConfig {
+public class OpenApiConfig {
 
     @Bean
     public OpenAPI customOpenAPI(@Value("${info.application.name}") String appName,
@@ -64,10 +67,17 @@ public class SwaggerConfig {
         return openApi -> openApi.getPaths().forEach((key, value) -> {
 
             // add Request-ID as request header
-            value.addParametersItem(new Parameter().in("header")
-                    .name(HEADER_REQUEST_ID)
-                    .schema(new StringSchema())
-                    .description("This header identifies the call, if not passed it is self-generated. This ID is returned in the response."));
+            var header = Optional.ofNullable(value.getParameters())
+                    .orElse(Collections.emptyList())
+                    .parallelStream()
+                    .filter(Objects::nonNull)
+                    .anyMatch(elem -> HEADER_REQUEST_ID.equals(elem.getName()));
+            if (!header) {
+                value.addParametersItem(new Parameter().in("header")
+                        .name(HEADER_REQUEST_ID)
+                        .schema(new StringSchema())
+                        .description("This header identifies the call, if not passed it is self-generated. This ID is returned in the response."));
+            }
 
             // add Request-ID as response header
             value.readOperations()
@@ -78,5 +88,16 @@ public class SwaggerConfig {
         });
     }
 
+    @Bean
+    public OpenApiCustomiser actuatorOpenApiCustomizer(){
+        return openApi -> {
+            Paths paths = openApi.getPaths().entrySet()
+                    .parallelStream()
+                    .filter(elem -> !elem.getKey().startsWith("/actuator") || elem.getKey().equals("/actuator/info"))
+                    .collect(Paths::new, (map, item) -> map.addPathItem(item.getKey(), item.getValue()), Paths::putAll);
+
+            openApi.setPaths(paths);
+        };
+    }
 
 }

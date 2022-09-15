@@ -10,7 +10,7 @@ TODO: resolve all the TODOs in this template
 
 ---
 ## Api Documentation 📖
-See the [OpenApi 3 here.](TODO set your url)
+See the [OpenApi 3 here.](TODO: set your url)
 
 ---
 
