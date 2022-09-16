@@ -88,16 +88,4 @@ public class OpenApiConfig {
         });
     }
 
-    @Bean
-    public OpenApiCustomiser actuatorOpenApiCustomizer(){
-        return openApi -> {
-            Paths paths = openApi.getPaths().entrySet()
-                    .parallelStream()
-                    .filter(elem -> !elem.getKey().startsWith("/actuator") || elem.getKey().equals("/actuator/info"))
-                    .collect(Paths::new, (map, item) -> map.addPathItem(item.getKey(), item.getValue()), Paths::putAll);
-
-            openApi.setPaths(paths);
-        };
-    }
-
 }
