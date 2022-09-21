@@ -53,6 +53,6 @@ jobs:
           azure-devops-project-url: https://dev.azure.com/pagopaspa/pagoPA-projects
           azure-pipeline-name: 'projectName.deploy' # TODO: set the name
           azure-devops-token: ${{ secrets.AZURE_DEVOPS_TOKEN }} # TODO: set this secret in repository
-          azure-template-parameters: '{"ENV": "dev", "SEMVER": "${{env.SEMVER}}", "TEST": "true"}'
+          azure-template-parameters: '{"ENV": "dev", "SEMVER": "${{env.SEMVER}}", "TEST": "true", "FORCE_REPLACE_DOCKER_IMAGE": "false"}'
           azure-pipeline-variables: '{"system.debug": "true"}'
 
