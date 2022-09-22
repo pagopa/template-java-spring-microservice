@@ -3,7 +3,8 @@ version: '2'
 services:
   app:
     container_name: 'app'
-    image: ${containerRegistry}/app:latest # TODO edit this file properly
+    image: app:latest # TODO edit this file properly
+    build: .
     env_file:
       - .env
     ports:
