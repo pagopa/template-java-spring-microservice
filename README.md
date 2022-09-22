@@ -31,7 +31,7 @@ See the [OpenApi 3 here.](TODO: set your url)
 
 ### Run docker container
 
-`docker-compose up --build`
+`docker-compose -f ./docker-compose-local.yml up -d`
 
 ---
 
@@ -64,6 +64,12 @@ Start the springboot application with this command:
 To run the **Junit** tests:
 
 `mvn clean verify`
+
+#### Integration testing
+from `./integration-test/src`
+
+1. `yarn install`
+2. `yarn test`
 
 
 ---
