@@ -1,7 +1,7 @@
 # Integration Tests
 👀 Integration tests are in `integration-test/src/` folder. See there for more information. 
 
-## How run with Docker 🐳
+## How run on Docker 🐳
 
 To run the integration tests on docker, you can run from this directory the script:
 
