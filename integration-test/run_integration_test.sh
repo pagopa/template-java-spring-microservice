@@ -1,12 +1,10 @@
 # run from this directory
-# use -local for run docker-compose-local.yml
-# example: sh ./run_integration_test.sh -local
-# or download from develop ACR the images
-# example: containerRegistry=pagopadcommonacr.azurecr.io sh ./run_integration_test.sh
-cd ..
+# example: sh ./run_integration_test.sh <local|dev|uat|prod>
+
 
 # create containers
-docker-compose -f ./docker-compose$1.yml up -d --remove-orphans --force-recreate
+cd ../docker || exit
+sh ./run_docker.sh "$1"
 
 # waiting the containers
 printf 'Waiting for the service'
@@ -20,11 +18,11 @@ until $(curl --output /dev/null --silent --head --fail http://localhost:8080/inf
 
     printf '.'
     attempt_counter=$(($attempt_counter+1))
-    sleep 6
+    sleep 10
 done
 echo 'Service Started'
 
 # run integration tests
-cd integration-test/src || exit
+cd ../integration-test/src || exit
 yarn install
 yarn test
