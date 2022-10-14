@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# TODO: delete this file if not needed
+
 # This script is used to import the cosmosdb certificate in a container. 👀 See the docker-compose
 
 attempt_counter=0
