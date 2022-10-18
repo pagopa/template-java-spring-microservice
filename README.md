@@ -30,8 +30,11 @@ See the [OpenApi 3 here.](TODO: set your url)
 - docker
 
 ### Run docker container
+from `./docker` directory
 
-`docker-compose -f ./docker-compose-local.yml up -d`
+`sh ./run_docker.sh dev`
+
+ℹ️ Note: for PagoPa ACR is required the login az acr login -n <acr-name>
 
 ---
 
