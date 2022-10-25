@@ -34,7 +34,7 @@ from `./docker` directory
 
 `sh ./run_docker.sh dev`
 
-ℹ️ Note: for PagoPa ACR is required the login az acr login -n <acr-name>
+ℹ️ Note: for PagoPa ACR is required the login `az acr login -n <acr-name>`
 
 ---
 
