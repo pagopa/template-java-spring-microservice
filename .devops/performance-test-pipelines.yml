@@ -1,8 +1,8 @@
 # azure-pipelines.yml
 trigger: none
 
-pool:
-  name: performance-test-linux
+#pool:
+#  name: performance-test-linux
 
 parameters:
   - name: "API_SUBSCRIPTION_KEY"
@@ -38,10 +38,6 @@ steps:
 
     # TODO: add your env params
   - script: |
-      docker run \
-        -v ${PWD}:/script \
-        -e API_SUBSCRIPTION_KEY=${{ parameters.API_SUBSCRIPTION_KEY }} \
-        -e VARS=${{ parameters.ENVIRONMENT }}.environment.json \
-        -e TEST_TYPE=./test-types/${{ parameters.TEST_TYPE }}.json \
-        grafana/k6 run /script/${{ parameters.SCRIPT }}.js \
-    displayName: Run k6 ${{ parameters.SCRIPT }} on ${{ parameters.ENVIRONMENT }}
+      cd ./performance-test
+      sh ./run_performance_test.sh ${{ parameters.ENVIRONMENT }} ${{ parameters.TEST_TYPE }} ${{ parameters.SCRIPT }} k6 ${{ parameters.API_SUBSCRIPTION_KEY }}
+    displayName: k6 run ${{ parameters.SCRIPT }} on ${{ parameters.ENVIRONMENT }}
