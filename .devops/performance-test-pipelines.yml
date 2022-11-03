@@ -1,8 +1,8 @@
 # azure-pipelines.yml
 trigger: none
 
-#pool:
-#  name: performance-test-linux
+pool:
+  name: pagopa-dev-loadtest-linux
 
 parameters:
   - name: "API_SUBSCRIPTION_KEY"
@@ -39,5 +39,5 @@ steps:
     # TODO: add your env params
   - script: |
       cd ./performance-test
-      sh ./run_performance_test.sh ${{ parameters.ENVIRONMENT }} ${{ parameters.TEST_TYPE }} ${{ parameters.SCRIPT }} k6 ${{ parameters.API_SUBSCRIPTION_KEY }}
-    displayName: k6 run ${{ parameters.SCRIPT }} on ${{ parameters.ENVIRONMENT }}
+      sh ./run_performance_test.sh ${{ parameters.ENVIRONMENT }} ${{ parameters.TEST_TYPE }} ${{ parameters.SCRIPT }} afmcalculatork6 ${{ parameters.API_SUBSCRIPTION_KEY }}
+    displayName: Run k6 ${{ parameters.SCRIPT }} on ${{ parameters.ENVIRONMENT }}
