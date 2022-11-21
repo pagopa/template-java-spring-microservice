@@ -6,6 +6,8 @@ You can use `local`, `dev`, `uat` or `prod` images
 
 `sh ./run_docker.sh <local|dev|uat|prod>`
 
+You can skip to recreate the images of Docker with `--skip-recreate`
+
 ---
 
 ℹ️ _Note_: for **PagoPa ACR** is **required** the login `az acr login -n <acr-name>`
