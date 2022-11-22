@@ -16,7 +16,8 @@ const rootUrl = `${vars.host}/${vars.basePath}`;
 
 
 export function setup() {
-    // 2. setup code (once)
+    // Before All
+    // setup code (once)
     // The setup code runs, setting up the test environment (optional) and generating data
     // used to reuse code for the same VU
     const params = {
@@ -69,4 +70,9 @@ export default function () {
 
     postcondition();
 
+}
+
+export function teardown(data) {
+    // After All
+    // teardown code
 }
