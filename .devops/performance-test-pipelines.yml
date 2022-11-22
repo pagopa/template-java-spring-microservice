@@ -20,9 +20,10 @@ parameters:
     type: string
     values:
       - "load"
+      - "smoke"
+      - "soak"
       - "spike"
       - "stress"
-      - "soak"
       - # TODO: add your values
   - name: "SCRIPT"
     displayName: "Script name"
