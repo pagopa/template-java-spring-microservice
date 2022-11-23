@@ -24,6 +24,7 @@ parameters:
       - "soak"
       - "spike"
       - "stress"
+      - "constant"
       - # TODO: add your values
   - name: "SCRIPT"
     displayName: "Script name"
