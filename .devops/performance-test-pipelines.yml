@@ -1,9 +1,6 @@
 # azure-pipelines.yml
 trigger: none
 
-pool:
-  name: pagopa-dev-loadtest-linux
-
 parameters:
   - name: "API_SUBSCRIPTION_KEY"
     displayName: "API_SUBSCRIPTION_KEY"
@@ -32,6 +29,15 @@ parameters:
     type: string
     values:
       - yourscriptname # TODO: add your script
+variables:
+  ${{ if eq(parameters['ENVIRONMENT'], 'dev') }}:
+    poolImage: 'pagopa-dev-loadtest-linux'
+  ${{ if eq(parameters['ENVIRONMENT'], 'uat') }}:
+    poolImage: 'pagopa-uat-loadtest-linux'
+
+
+pool:
+  name: $(poolImage)
 
 steps:
   - script: |

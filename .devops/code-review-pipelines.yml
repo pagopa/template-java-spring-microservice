@@ -69,6 +69,8 @@ stages:
 
       - job: smoke_tests
         dependsOn: # parallel running job
+        pool:
+          vmImage: 'ubuntu-18.04'
         steps:
           - checkout: self
             persistCredentials: true

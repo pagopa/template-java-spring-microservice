@@ -49,6 +49,11 @@ services:
 #  cosmosdb:
 #    container_name: 'cosmosdb'
 #    image: mcr.microsoft.com/cosmosdb/linux/azure-cosmos-emulator
+#    deploy:
+#      resources:
+#        limits:
+#          cpus: '2.0'
+#          memory: 3g
 #    ports:
 #      - '8081:8081'
 #      - '10251-10254:10251-10254'
