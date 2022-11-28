@@ -35,10 +35,6 @@ parameters:
     displayName: Run integration/smoke tests
     type: boolean
     default: true
-  - name: "API_SUBSCRIPTION_KEY"
-    displayName: "API_SUBSCRIPTION_KEY"
-    type: string
-    default: ' '
 
 variables:
   imageRepository: '$(IMAGE_REPOSITORY_NAME)'
@@ -51,6 +47,7 @@ variables:
     poolImage: 'pagopa-dev-linux'
     appInsightsServiceConn: "$(TF_APPINSIGHTS_SERVICE_CONN_DEV)"
     appInsightsResourceId: "$(TF_APPINSIGHTS_RESOURCE_ID_DEV)"
+    API_SUBSCRIPTION_KEY: $(DEV_API_SUBSCRIPTION_KEY)
   ${{ if eq(parameters['ENV'], 'uat') }}:
     dockerRegistryServiceConnection: $(UAT_CONTAINER_REGISTRY_SERVICE_CONN)
     dockerRegistryFqdn: $(UAT_CONTAINER_NAMESPACE)
@@ -58,6 +55,7 @@ variables:
     poolImage: 'pagopa-uat-linux'
     appInsightsServiceConn: "$(TF_APPINSIGHTS_SERVICE_CONN_UAT)"
     appInsightsResourceId: "$(TF_APPINSIGHTS_RESOURCE_ID_UAT)"
+    API_SUBSCRIPTION_KEY: $(UAT_API_SUBSCRIPTION_KEY)
   ${{ if eq(parameters['ENV'], 'prod') }}:
     dockerRegistryServiceConnection: $(PROD_CONTAINER_REGISTRY_SERVICE_CONN)
     dockerRegistryFqdn: $(PROD_CONTAINER_NAMESPACE)
@@ -221,6 +219,6 @@ stages:
               targetType: 'inline'
               script: |
                 cd ./integration-test/src
-                export subkey=${{ parameters.API_SUBSCRIPTION_KEY }}
+                export subkey=$(API_SUBSCRIPTION_KEY)
                 yarn install
                 yarn test:${{ parameters.ENV }}
