@@ -1,6 +1,6 @@
 locals {
   github = {
     org        = "pagopa"
-    repository = "io-pagopa-proxy"
+    repository = "your-name" # TODO
   }
 }
