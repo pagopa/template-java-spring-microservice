@@ -1,10 +1,11 @@
 prefix    = "pagopa"
-env_short = "d"
+env_short = "u"
+
 
 tags = {
   CreatedBy   = "Terraform"
-  Environment = "Dev"
+  Environment = "Uat"
   Owner       = "pagoPA"
-  Source      = "https://github.com/pagopa/pagopa-infra"
+  Source      = "https://github.com/pagopa/your-repository" # TODO
   CostCenter  = "TS310 - PAGAMENTI & SERVIZI"
 }
