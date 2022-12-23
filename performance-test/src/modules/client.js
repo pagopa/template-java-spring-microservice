@@ -1,10 +1,9 @@
 import http from 'k6/http';
 
-
 export function example(rootUrl, params) {
-	const url = `${rootUrl}/`
+  const url = `${rootUrl}/`
 
-	const payload = {}
+  const payload = {}
 
-	return http.post(url, JSON.stringify(payload), params);
+  return http.post(url, JSON.stringify(payload), params);
 }

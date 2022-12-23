@@ -32,11 +32,13 @@ Click on reporter link to view details .
 To run a single _feature_ or single _Scenario_ typing
 
 Ex. single _features_ `organizations.feature`
+
 ```sh
 npx cucumber-js -r step_definitions features/<filename>.feature
 ```
 
 Ex. single _Scenario_ into `<filename>.feature` ( add source line )
+
 ```sh
 npx cucumber-js -r step_definitions features/<filename>.feature:46
 ```

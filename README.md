@@ -9,12 +9,15 @@ TODO: generate a index with this tool: https://ecotrust-canada.github.io/markdow
 TODO: resolve all the TODOs in this template
 
 ---
+
 ## Api Documentation 📖
+
 See the [OpenApi 3 here.](TODO: set your url)
 
 ---
 
 ## Technology Stack
+
 - Java 11
 - Spring Boot
 - Spring Web
@@ -22,14 +25,17 @@ See the [OpenApi 3 here.](TODO: set your url)
 - JPA
 - ...
 - TODO
+
 ---
 
 ## Start Project Locally 🚀
 
 ### Prerequisites
+
 - docker
 
 ### Run docker container
+
 from `./docker` directory
 
 `sh ./run_docker.sh dev`
@@ -41,6 +47,7 @@ from `./docker` directory
 ## Develop Locally 💻
 
 ### Prerequisites
+
 - git
 - maven
 - jdk-11
@@ -51,13 +58,10 @@ Start the springboot application with this command:
 
 `mvn spring-boot:run -Dspring-boot.run.profiles=local`
 
-
-
 ### Spring Profiles
 
 - **local**: to develop locally.
 - _default (no profile set)_: The application gets the properties from the environment (for Azure).
-
 
 ### Testing 🧪
 
@@ -68,21 +72,24 @@ To run the **Junit** tests:
 `mvn clean verify`
 
 #### Integration testing
+
 From `./integration-test/src`
 
 1. `yarn install`
 2. `yarn test`
 
 #### Performance testing
+
 install [k6](https://k6.io/) and then from `./performance-test/src`
 
 1. `k6 run --env VARS=local.environment.json --env TEST_TYPE=./test-types/load.json main_scenario.js`
 
-
 ---
 
 ## Contributors 👥
+
 Made with ❤️ by PagoPa S.p.A.
 
 ### Mainteiners
+
 See `CODEOWNERS` file
