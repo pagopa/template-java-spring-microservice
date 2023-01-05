@@ -5,7 +5,7 @@ on:
   pull_request:
     branches:
       - main
-    types: [ opened, synchronize, labeled, unlabeled, reopened, edited ]
+    types: [ opened, synchronize, labeled, unlabeled, reopened ]
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -81,7 +81,7 @@ jobs:
                 const ignored_additions = execSync('git --no-pager  diff --numstat | grep ' + file + ' | cut -f 1', { encoding: 'utf-8' })
                 const ignored_deletions = execSync('git --no-pager  diff --numstat | grep ' + file + ' | cut -f 2', { encoding: 'utf-8' })
             
-                ignored += (parseInt(ignored_additions) + parseInt(ignored_deletions))
+                ignored += (parseInt(ignored_additions || 0) + parseInt(ignored_deletions || 0))
               }
               changes -= ignored
             }
