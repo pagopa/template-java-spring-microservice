@@ -58,15 +58,35 @@ jobs:
     runs-on: ubuntu-latest
     name: Check Size
     steps:
+      - uses: actions/checkout@v3
+
       - name: Check Size
         uses: actions/github-script@v6.3.3
+        env:
+          IGNORED_FILES: openapi.json, file2, ... # TODO
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const additions = context.payload.pull_request.additions || 0
             const deletions = context.payload.pull_request.deletions || 0
+            var changes = additions + deletions
 
-            if (additions + deletions < 150){
+            const { IGNORED_FILES } = process.env
+            const ignored_files = IGNORED_FILES.trim().split(',').filter(word => word.length > 0);
+            if (ignored_files.length > 0){
+              var ignored = 0
+              const execSync = require('child_process').execSync;
+              for (const file of IGNORED_FILES.trim().split(',')) {
+            
+                const ignored_additions = execSync('git --no-pager  diff --numstat | grep ' + file + ' | cut -f 1', { encoding: 'utf-8' })
+                const ignored_deletions = execSync('git --no-pager  diff --numstat | grep ' + file + ' | cut -f 2', { encoding: 'utf-8' })
+            
+                ignored += (parseInt(ignored_additions) + parseInt(ignored_deletions))
+              }
+              changes -= ignored
+            }
+            
+            if (changes < 150){
               github.rest.issues.addLabels({
                 issue_number: context.issue.number,
                 owner: context.repo.owner,
@@ -75,7 +95,7 @@ jobs:
               })
             }
 
-            if (additions + deletions > 450){
+            if (changes > 450){
               github.rest.issues.addLabels({
                 issue_number: context.issue.number,
                 owner: context.repo.owner,
