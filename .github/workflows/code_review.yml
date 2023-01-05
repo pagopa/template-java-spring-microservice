@@ -57,8 +57,8 @@ jobs:
         run: mvn clean verify -P sonar \
           -Dsonar.host.url=https://sonarcloud.io \
           -Dsonar.organization=pagopa \
-          -Dsonar.projectKey=${{ env.PROJECT_DIR }} \
-          -Dsonar.login=${{ secrets.SONAR_TOKEN }} \
+          -Dsonar.projectKey=${{ env.PROJECT_KEY }} \
+          -Dsonar.login=${{ secrets.SONAR_TOKEN }} \ # TODO
           -Dsonar.coverage.exclusions=**/config/*,**/*Mock*,**/model/**,**/entity/* \
           -Dsonar.cpd.exclusions=**/model/**,**/entity/* \
           -Dsonar.branch.name=${{ github.ref_name }}
