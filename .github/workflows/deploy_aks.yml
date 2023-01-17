@@ -168,7 +168,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v4.3.0
         with:
-          images: ${{ github.event.repository.name }}
+          images: ghcr.io/${{ github.repository }}
           tags: |
             latest
             ${{ needs.release.outputs.version }}
@@ -182,6 +182,7 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+    # TODO remember to add the package write permissions to the action https://github.com/users/<OWNER>/packages/container/<REPOSITORY>/settings
 
   deploy:
     needs: [release, build]

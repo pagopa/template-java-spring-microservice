@@ -2,13 +2,11 @@ name: Create Dashboard
 
 # Controls when the workflow will run
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - 'openapi/openapi.json'
-      - '.github/workflows/create_dashboard.yaml'
-      - '.opex/**'
+  workflow_run:
+    workflows:
+      - Auto Deploy
+    types:
+      - completed
 
 env:
   TEMPLATE_DIR: azure-dashboard
@@ -22,9 +20,10 @@ permissions:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  build:
+  dashboard:
     # The type of runner that the job will run on
     runs-on: ubuntu-22.04
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
 
     strategy:
       matrix:
