@@ -50,7 +50,6 @@ jobs:
       version: ${{ steps.get_version.outputs.version }}
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-      - run: exit 1
       - uses: actions/checkout@v3
         with:
           ref: main
@@ -226,14 +225,11 @@ jobs:
         # TODO log deployment successful on App Insights
 
   notify:
-    needs: [ release, build, deploy]
+    needs: [ deploy ]
     runs-on: ubuntu-latest
     name: Notify
     if: always()
     steps:
-      - run: |
-          echo ${{ toJSON(needs) }}
-
       - name: Report Status
         if: always()
         uses: ravsamhq/notify-slack-action@v2
