@@ -2,8 +2,6 @@ name: Auto Deploy
 
 # Controls when the workflow will run
 on:
-  push:
-    branches: [ "main" ]
   pull_request:
     branches:
       - main
@@ -12,6 +10,25 @@ on:
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
+    inputs:
+      environment:
+        required: true
+        type: choice
+        description: Select the Environment
+        options:
+          - dev
+          - uat
+          - prod
+      semver:
+        required: true
+        type: choice
+        description: Select the new Semantic Version
+        options:
+          - major
+          - minor
+          - patch
+          - buildNumber
+          - skip
 
 env:
   NAMESPACE: # TODO
@@ -35,6 +52,9 @@ jobs:
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       - uses: actions/checkout@v3
+        with:
+          ref: main
+
       - name: Set up JDK 11
         uses: actions/setup-java@v1
         with:
@@ -52,20 +72,23 @@ jobs:
 
       - name: Set build-number
         run: |
-          mvn build-helper:parse-version versions:set -DnewVersion=${parsedVersion.majorVersion}.${parsedVersion.minorVersion}.${parsedVersion.incrementalVersion}-${parsedVersion.nextBuildNumber}-${{github.ref_name}}
-        if: ${{ github.ref_name != 'main' }}
+          mvn build-helper:parse-version versions:set -DnewVersion='${parsedVersion.majorVersion}.${parsedVersion.minorVersion}.${parsedVersion.incrementalVersion}-${parsedVersion.nextBuildNumber}-${{github.ref_name}}'
+        if: ${{ github.event.inputs.semver == 'buildNumber' }}
+
       - name: Set major
         run: |
-          mvn build-helper:parse-version versions:set -DnewVersion=${parsedVersion.nextMajorVersion}.0.0
-        if: ${{ contains(github.event.pull_request.labels.*.name, 'breaking-change') }}
+          mvn build-helper:parse-version versions:set -DnewVersion='${parsedVersion.nextMajorVersion}.0.0'
+        if: ${{ contains(github.event.pull_request.labels.*.name, 'breaking-change') || github.event.inputs.semver == 'major' }}
+
       - name: Set minor
         run: |
-          mvn build-helper:parse-version versions:set -DnewVersion=${parsedVersion.majorVersion}.${parsedVersion.nextMinorVersion}.0
-        if: ${{ contains(github.event.pull_request.labels.*.name, 'enhancement') }}
+          mvn build-helper:parse-version versions:set -DnewVersion='${parsedVersion.majorVersion}.${parsedVersion.nextMinorVersion}.0'
+        if: ${{ contains(github.event.pull_request.labels.*.name, 'enhancement') || github.event.inputs.semver == 'minor' }}
+
       - name: Set patch
         run: |
-          mvn build-helper:parse-version versions:set -DnewVersion=${parsedVersion.majorVersion}.${parsedVersion.minorVersion}.${parsedVersion.nextIncrementalVersion}
-        if: ${{ contains(github.event.pull_request.labels.*.name, 'bug') }}
+          mvn build-helper:parse-version versions:set -DnewVersion='${parsedVersion.majorVersion}.${parsedVersion.minorVersion}.${parsedVersion.nextIncrementalVersion}'
+        if: ${{ contains(github.event.pull_request.labels.*.name, 'bug') || github.event.inputs.semver == 'patch' }}
 
       - id: get_version
         name: Get Version
@@ -76,31 +99,31 @@ jobs:
       - name: Update Version Helm
         run: |
           for i in helm/values-*.yaml; do
-               [ -f "$i" ] || break
-               yq -i ".microservice-chart.image.tag = \"${{ steps.get_version.outputs.get_version }}\"" "$i"
-               git add "$i"
-             done
-             CHART_FILE="helm/Chart.yaml"
-             if [[ -f "$CHART_FILE" ]]; then
-               yq -i ".version = \"${{ steps.get_version.outputs.get_version }}\"" "$CHART_FILE"
-               yq -i ".appVersion = \"${{ steps.get_version.outputs.get_version }}\"" "$CHART_FILE"
-               git add "$CHART_FILE"
-             fi
+            [ -f "$i" ] || break
+            yq -i ".microservice-chart.image.tag = \"${{ steps.get_version.outputs.version }}\"" "$i"
+            git add "$i"
+          done
+          CHART_FILE="helm/Chart.yaml"
+          if [[ -f "$CHART_FILE" ]]; then
+            yq -i ".version = \"${{ steps.get_version.outputs.version }}\"" "$CHART_FILE"
+            yq -i ".appVersion = \"${{ steps.get_version.outputs.version }}\"" "$CHART_FILE"
+            git add "$CHART_FILE"
+          fi
       - name: Update Openapi/Swagger Version
         run: |
           for i in openapi/*.json; do
             [ -f "$i" ] || break
-            cat <<< "$(jq ".info.version = \"${{ steps.get_version.outputs.get_version }}\"" "$i")" > "$i"
+            cat <<< "$(jq ".info.version = \"${{ steps.get_version.outputs.version }}\"" "$i")" > "$i"
             git add $i
           done
           for i in openapi/*.yaml; do
             [ -f "$i" ] || break
-            yq -i ".info.version = \"${{ steps.get_version.outputs.get_version }}\"" "$i"
+            yq -i ".info.version = \"${{ steps.get_version.outputs.version }}\"" "$i"
             git add "$i"
           done
           for i in openapi/*.yml; do
             [ -f "$i" ] || break
-            yq -i ".info.version = \"${{ steps.get_version.outputs.get_version }}\"" "$i"
+            yq -i ".info.version = \"${{ steps.get_version.outputs.version }}\"" "$i"
             git add "$i"
           done
 
@@ -111,7 +134,7 @@ jobs:
           git config --global user.email "github-bot@pagopa.it"
           git config --global user.name "pagopa-github-bot"
           git commit -m "Bump version [skip ci]" || exit 0
-          git push origin ${{ github.ref_name }}
+          git push origin main
 
       - name: Create Release
         uses: ncipollo/release-action@v1.12.0
@@ -127,8 +150,11 @@ jobs:
   build:
     needs: release
     runs-on: ubuntu-latest
+    name: Build and Push Docker Image
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
+        with:
+          ref: main
 
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v2
@@ -142,45 +168,51 @@ jobs:
         uses: docker/metadata-action@v4.3.0
         with:
           images: ${{ github.event.repository.name }}
+          tags: |
+            latest
+            ${{ needs.release.outputs.version }}
+            type=ref,event=branch
+            type=sha
 
       - name: Build and push
         uses: docker/build-push-action@v3
         with:
           context: .
-          push: ${{ github.event_name != 'pull_request' }}
+          push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
 
   deploy:
     needs: [release, build]
     runs-on: ubuntu-latest
+    name: Deploy on AKS
     strategy:
       matrix:
         environment: [ dev, uat, prod ]
     steps:
       - uses: actions/checkout@v3
-
-      - name: Helm Setup
-        run: |
-          DEPLOY_VERSION=${{ needs.release.outputs.version }}
-          CHART_FILE="helm/Chart.yaml"
-          if [[ -f "$CHART_FILE" ]]; then
-            yq -i ".appVersion = \"$(DEPLOY_VERSION)\"" "$CHART_FILE"
-          fi
-          helm repo add microservice-chart https://pagopa.github.io/aks-microservice-chart-blueprint
-          helm dep build helm  
+        if: ${{ github.event.inputs.environment == null || matrix.environment == github.event.inputs.environment }}
+        with:
+          ref: main
 
       - name: Manual Workflow Approval
         uses: trstringer/manual-approval@v1.8.0
-        if: ${{ matrix.environment != 'dev' }}
+        if: ${{ matrix.environment != 'dev' && (github.event.inputs.environment == null || matrix.environment == github.event.inputs.environment) }}
         with:
           secret: ${{ github.TOKEN }}
-          approvers: pagopa-team
+          approvers: user1, team1 # TODO
           minimum-approvals: 1
           issue-title: "Deploying v${{ needs.release.outputs.version }} to ${{ matrix.environment }}"
           exclude-workflow-initiator-as-approver: false
 
+      - name: Helm Setup
+        if: ${{ github.event.inputs.environment == null || matrix.environment == github.event.inputs.environment }}
+        run: |
+          helm repo add microservice-chart https://pagopa.github.io/aks-microservice-chart-blueprint
+          helm dep build helm  
+
       - name: Helm Deploy
+        if: ${{ github.event.inputs.environment == null || matrix.environment == github.event.inputs.environment }}
         run: |
           helm upgrade --namespace ${{ env.NAMESPACE }}
             --install --values ./helm/values-${{ matrix.environment }}.yaml 
@@ -189,3 +221,15 @@ jobs:
             ${{ env.APP_NAME }} ./helm
 
         # TODO log deployment successful on App Insights
+
+      - name: Report Status
+        if: always()
+        uses: ravsamhq/notify-slack-action@v2
+        with:
+          status: ${{ job.status }}
+          notify_when: 'failure,skipped'
+          notification_title: '{workflow} has {status_message}'
+          message_format: '{emoji} *{workflow}* {status_message} in <{repo_url}|{repo}>'
+          footer: 'Linked to Repo <{repo_url}|{repo}>'
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }} # TODO
