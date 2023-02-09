@@ -1,4 +1,4 @@
-name: Auto Deploy
+name: Deploy
 
 # Controls when the workflow will run
 on:
@@ -19,6 +19,7 @@ on:
           - dev
           - uat
           - prod
+          - all
       semver:
         required: true
         type: choice
@@ -38,6 +39,8 @@ permissions:
   packages: write
   contents: write
   issues: write
+  id-token: write
+  actions: read
 
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
@@ -52,7 +55,13 @@ jobs:
     steps:
       - uses: actions/checkout@v3
         with:
-          ref: main
+          ref: ${{ github.ref_name}}
+          token: ${{ secrets.API_TOKEN_GITHUB }}
+
+      - name: Dump GitHub context
+        run: echo $JSON
+        env:
+          JSON: ${{ toJSON(github) }}
 
       - name: Set up JDK 11
         uses: actions/setup-java@v1
@@ -71,7 +80,7 @@ jobs:
 
       - name: Set build-number
         run: |
-          mvn build-helper:parse-version versions:set -DnewVersion='${parsedVersion.majorVersion}.${parsedVersion.minorVersion}.${parsedVersion.incrementalVersion}-${parsedVersion.nextBuildNumber}-${{github.ref_name}}'
+          mvn build-helper:parse-version versions:set -DnewVersion='${parsedVersion.majorVersion}.${parsedVersion.minorVersion}.${parsedVersion.incrementalVersion}-${parsedVersion.nextBuildNumber}'
         if: ${{ github.event.inputs.semver == 'buildNumber' }}
 
       - name: Set major
@@ -96,6 +105,7 @@ jobs:
           echo "version=$(mvn -f pom.xml help:evaluate -Dexpression=project.version -q -DforceStdout)" >> $GITHUB_OUTPUT
 
       - name: Update Version Helm
+        if: ${{ (github.event_name == 'pull_request' && !contains(github.event.pull_request.labels.*.name, 'ignore-for-release')) || (github.event.inputs.semver != null && github.event.inputs.semver != 'skip') }}
         run: |
           for i in helm/values-*.yaml; do
             [ -f "$i" ] || break
@@ -109,6 +119,7 @@ jobs:
             git add "$CHART_FILE"
           fi
       - name: Update Openapi/Swagger Version
+        if: ${{ (github.event_name == 'pull_request' && !contains(github.event.pull_request.labels.*.name, 'ignore-for-release')) || (github.event.inputs.semver != null && github.event.inputs.semver != 'skip') }}
         run: |
           for i in openapi/*.json; do
             [ -f "$i" ] || break
@@ -127,17 +138,17 @@ jobs:
           done
 
       - name: Push New Version
-        if: ${{ !contains(github.event.pull_request.labels.*.name, 'ignore-for-release') || github.event.inputs.semver != 'skip' }}
+        if: ${{ (github.event_name == 'pull_request' && !contains(github.event.pull_request.labels.*.name, 'ignore-for-release')) || (github.event.inputs.semver != null && github.event.inputs.semver != 'skip') }}
         run: |
           echo "${{ steps.get_version.outputs.version }}"
           git ls-files . | grep 'pom.xml'  | xargs git add
           git config --global user.email "github-bot@pagopa.it"
           git config --global user.name "pagopa-github-bot"
           git commit -m "Bump version [skip ci]" || exit 0
-          git push origin main
+          git push origin ${{ github.ref_name}}
 
       - name: Create Release
-        if: ${{ !contains(github.event.pull_request.labels.*.name, 'ignore-for-release') || github.event.inputs.semver != 'skip'}}
+        if: ${{ (github.event_name == 'pull_request' && !contains(github.event.pull_request.labels.*.name, 'ignore-for-release')) || (github.event.inputs.semver != null && github.event.inputs.semver != 'skip') }}
         uses: ncipollo/release-action@v1.12.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -155,7 +166,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
         with:
-          ref: main
+          ref: ${{ github.ref_name}}
 
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v2
@@ -174,6 +185,7 @@ jobs:
             ${{ needs.release.outputs.version }}
             type=ref,event=branch
             type=sha
+            ${{ github.event.inputs.environment != null && github.event.inputs.environment || 'dev'  }}
 
       - name: Build and push
         uses: docker/build-push-action@v3
@@ -191,36 +203,52 @@ jobs:
     strategy:
       matrix:
         environment: [ dev, uat, prod ]
+        include:
+          - environment : dev
+            short: d
+          - environment : uat
+            short: u
+          - environment : prod
+            short: p
     steps:
       - uses: actions/checkout@v3
-        if: ${{ github.event.inputs.environment == null || matrix.environment == github.event.inputs.environment }}
+        if: ${{ (github.event.inputs.environment == null && matrix.environment == 'dev' ) || matrix.environment == github.event.inputs.environment || github.event.inputs.environment == 'all' }}
         with:
-          ref: main
+          ref: ${{ github.ref_name}}
 
-      - name: Manual Workflow Approval
-        uses: trstringer/manual-approval@v1.8.0
-        if: ${{ matrix.environment != 'dev' && (github.event.inputs.environment == null || matrix.environment == github.event.inputs.environment) }}
+      - name: Azure Login
+        if: ${{ (github.event.inputs.environment == null && matrix.environment == 'dev' ) || matrix.environment == github.event.inputs.environment || github.event.inputs.environment == 'all' }}
+        uses: azure/login@89d153571fe9a34ed70fcf9f1d95ab8debea7a73
         with:
-          secret: ${{ github.TOKEN }}
-          approvers: user1, team1 # TODO
-          minimum-approvals: 1
-          issue-title: "Deploying v${{ needs.release.outputs.version }} to ${{ matrix.environment }}"
-          exclude-workflow-initiator-as-approver: false
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      #      - name: Build image on ACR
+      #        if: ${{ (github.event.inputs.environment == null && matrix.environment == 'dev' ) || matrix.environment == github.event.inputs.environment || github.event.inputs.environment == 'all' }}
+      #        run: |
+      #          az configure --defaults acr=pagopa${{ matrix.short }}commonacr
+      #          az acr build --image ${{ env.APP_NAME }}:${{ needs.release.outputs.version }} --registry pagopa${{ matrix.short }}commonacr .
+
+      - name: Gets K8s context
+        id: login
+        if: ${{ (github.event.inputs.environment == null && matrix.environment == 'dev' ) || matrix.environment == github.event.inputs.environment || github.event.inputs.environment == 'all' }}
+        uses: azure/aks-set-context@v3
+        with:
+          resource-group: pagopa-${{matrix.short}}-weu-dev-aks-rg
+          cluster-name: pagopa-${{matrix.short}}-weu-dev-aks
 
       - name: Helm Setup
-        if: ${{ github.event.inputs.environment == null || matrix.environment == github.event.inputs.environment }}
+        if: ${{ (github.event.inputs.environment == null && matrix.environment == 'dev' ) || matrix.environment == github.event.inputs.environment || github.event.inputs.environment == 'all' }}
         run: |
           helm repo add microservice-chart https://pagopa.github.io/aks-microservice-chart-blueprint
           helm dep build helm  
 
       - name: Helm Deploy
-        if: ${{ github.event.inputs.environment == null || matrix.environment == github.event.inputs.environment }}
-        run: |
-          helm upgrade --namespace ${{ env.NAMESPACE }}
-            --install --values ./helm/values-${{ matrix.environment }}.yaml 
-            --set microservice-chart.image.tag=${{ needs.release.outputs.version }} 
-            --wait --timeout 5m0s 
-            ${{ env.APP_NAME }} ./helm
+        if: ${{ (github.event.inputs.environment == null && matrix.environment == 'dev' ) || matrix.environment == github.event.inputs.environment || github.event.inputs.environment == 'all' }}
+        run: helm upgrade --namespace ${{ env.NAMESPACE }}
+          --install --values ./helm/values-${{ matrix.environment }}.yaml
+          --set microservice-chart.image.tag=${{ needs.release.outputs.version }}
+          --wait --timeout 5m0s
+          ${{ env.APP_NAME }} ./helm
 
         # TODO log deployment successful on App Insights
 
@@ -235,9 +263,10 @@ jobs:
         uses: ravsamhq/notify-slack-action@v2
         with:
           status: ${{ needs.deploy.result }}
+          token: ${{ secrets.GITHUB_TOKEN }}
           notify_when: 'failure,skipped'
           notification_title: '{workflow} has {status_message}'
-          message_format: '{emoji} *{workflow}* {status_message} in <{repo_url}|{repo}>'
+          message_format: '{emoji} <{workflow_url}|{workflow}> {status_message} in <{repo_url}|{repo}>'
           footer: 'Linked to Repo <{repo_url}|{repo}>'
         env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }} # TODO
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
