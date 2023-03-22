@@ -3,7 +3,7 @@ microservice-chart:
   nameOverride: ""
   fullnameOverride: ""
   image:
-    repository: pagopadcommonacr.azurecr.io/yourname # TODO
+    repository: ghcr.io/pagopa/yourname # TODO
     tag: "0.0.3"
     pullPolicy: Always
   livenessProbe:
@@ -71,3 +71,22 @@ microservice-chart:
   nodeSelector: { }
   tolerations: [ ]
   affinity: { }
+  canaryDelivery:
+    create: true
+    ingress:
+      canary:
+        type: header
+        headerName: X-Pod-Version
+        headerValue: canary
+        weightPercent: 0
+    service:
+      create: true
+    deployment:
+      create: true
+      image:
+        repository: ghcr.io/pagopa/yourname # TODO
+        tag: "0.0.3"
+        pullPolicy: Always
+      envConfig: { }
+      envSecret: { }
+
