@@ -1,6 +1,7 @@
 #!/bin/bash
 
-# example: sh ./run_integration_test.sh <local|dev|uat|prod>
+# example: sh ./run_integration_test.sh <local|dev|uat|prod> <sub-key>
+
 set -e
 
 # run integration tests

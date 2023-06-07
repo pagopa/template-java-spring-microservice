@@ -1,10 +1,9 @@
-name: Open a PR in Infra repository
+name: Update Infra
 
 on:
-  pull_request:
+  push:
     branches:
       - main
-    types: [ closed ]
     paths:
       - 'openapi/openapi.json'
 

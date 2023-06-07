@@ -105,7 +105,7 @@ jobs:
                 issue_number: context.issue.number,
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                body: 'Comment this PR with *update_code* to format the code. Consider to use pre-commit to format the code.'
+                body: 'Comment this PR with *update_code* to update `openapi.json` and format the code. Consider to use pre-commit to format the code.'
             })
             core.setFailed('Format your code.')
 
@@ -223,6 +223,5 @@ jobs:
                 })
               }
             
-              core.setFailed('PR is too large: ' + changes + ' changes.')
             }
 

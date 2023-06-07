@@ -4,7 +4,7 @@ microservice-chart:
   fullnameOverride: ""
   image:
     repository: ghcr.io/pagopa/yourname # TODO
-    tag: "0.0.3"
+    tag: "0.0.0"
     pullPolicy: Always
   livenessProbe:
     httpGet:
@@ -62,18 +62,31 @@ microservice-chart:
   envConfig:
     # TODO: set your name
     WEBSITE_SITE_NAME: 'yourProjectName' # required to show cloud role name in application insights
+    ENV: 'azure-prod'
+    APP_LOGGING_LEVEL: 'INFO'
+    DEFAULT_LOGGING_LEVEL: 'INFO'
+    CORS_CONFIGURATION: '{"origins": ["*"], "methods": ["*"]}'
   envSecret:
     # required
     APPLICATIONINSIGHTS_CONNECTION_STRING: 'ai-p-connection-string'
   keyvault:
-    name: "pagopa-p-afm-kv"
+    name: "pagopa-p-name-kv" #TODO
     tenantId: "7788edaf-0346-4068-9d79-c868aed15b3d"
   nodeSelector: { }
   tolerations: [ ]
-  affinity: { }
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+          - matchExpressions:
+              - key: node_type
+                operator: In
+                values:
+                  - user
   canaryDelivery:
     create: true
     ingress:
+      create: true
       canary:
         type: header
         headerName: X-Canary
@@ -85,7 +98,7 @@ microservice-chart:
       create: true
       image:
         repository: ghcr.io/pagopa/yourname # TODO
-        tag: "0.0.3"
+        tag: "0.0.0"
         pullPolicy: Always
       envConfig: { }
       envSecret: { }

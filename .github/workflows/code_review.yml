@@ -78,4 +78,3 @@ jobs:
           cd ./integration-test
           chmod +x ./run_integration_test.sh
           ./run_integration_test.sh local
-
