@@ -95,33 +95,13 @@ jobs:
               })
             );
 
-
-
   deploy_aks:
     name: Deploy on AKS
     needs: [ integration_test ]
     if: ${{ inputs.deploy_uat }}
-    uses: ./.github/workflows/deploy_with_github_runner.yml
+    uses: ./.github/workflows/release_deploy.yml
     with:
       environment: uat
-      target: uat
+      beta: false
+      skip_release: false
     secrets: inherit
-
-  notify:
-    needs: [ integration_test ]
-    runs-on: ubuntu-latest
-    name: Notify
-    if: always()
-    steps:
-      - name: Report Status
-        if: always()
-        uses: ravsamhq/notify-slack-action@v2
-        with:
-          status: ${{ needs.integration_test.result }}
-          token: ${{ secrets.GITHUB_TOKEN }}
-          notify_when: 'failure,skipped'
-          notification_title: '{workflow} has {status_message}'
-          message_format: '{emoji} <{workflow_url}|{workflow}> {status_message} in <{repo_url}|{repo}>'
-          footer: 'Linked to Repo <{repo_url}|{repo}>'
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
