@@ -1,6 +1,7 @@
 # Template for Java Spring Microservice project
 
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=TODO-set-your-id&metric=alert_status)](https://sonarcloud.io/dashboard?id=TODO-set-your-id)
+[![Integration Tests](https://github.com/pagopa/<TODO>/actions/workflows/integration_test.yml/badge.svg)](https://github.com/pagopa/<TODO>/actions/workflows/integration_test.yml)
 
 TODO: add a description
 
