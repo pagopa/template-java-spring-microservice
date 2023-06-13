@@ -66,7 +66,7 @@ jobs:
     needs: [ integration_test ]
     runs-on: ubuntu-latest
     name: Notify
-    if: ${{ always() }}
+    if: ${{ always() && inputs.notify == 'true' }}
     steps:
       - name: Report Status
         if: ${{ inputs.notify }}
