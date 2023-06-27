@@ -24,7 +24,6 @@ locals {
     "CLIENT_ID" : module.github_runner_app.application_id,
     "TENANT_ID" : data.azurerm_client_config.current.tenant_id,
     "SUBSCRIPTION_ID" : data.azurerm_subscription.current.subscription_id,
-    "ISSUER_RANGE_TABLE" : "${local.prefix}${var.env_short}${local.location_short}${local.domain}saissuerrangetable",
     "SUBKEY" : data.azurerm_key_vault_secret.key_vault_integration_test_subkey.value,
   }
   env_variables = {
@@ -32,7 +31,6 @@ locals {
     "CONTAINER_APP_ENVIRONMENT_RESOURCE_GROUP_NAME" : local.container_app_environment.resource_group,
     "CLUSTER_NAME" : local.aks_cluster.name,
     "CLUSTER_RESOURCE_GROUP" : local.aks_cluster.resource_group_name,
-    "DOMAIN" : local.domain,
     "NAMESPACE" : local.domain,
   }
   repo_secrets = {
