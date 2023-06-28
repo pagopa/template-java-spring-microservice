@@ -1,3 +1,8 @@
+data "azurerm_storage_account" "tf_storage_account"{
+  name                = "pagopainfraterraform${var.env}"
+  resource_group_name = "io-infra-rg"
+}
+
 data "azurerm_resource_group" "dashboards" {
   name = "dashboards"
 }
@@ -20,6 +25,10 @@ data "azurerm_key_vault" "key_vault" {
 data "azurerm_key_vault" "domain_key_vault" {
   name                = "pagopa-${var.env_short}-${local.domain}-kv"
   resource_group_name = "pagopa-${var.env_short}-${local.domain}-sec-rg"
+}
+
+data "azurerm_resource_group" "apim_resource_group" {
+  name = "${local.product}-api-rg"
 }
 
 data "azurerm_key_vault_secret" "key_vault_sonar" {
