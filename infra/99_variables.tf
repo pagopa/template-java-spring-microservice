@@ -24,49 +24,6 @@ variable "env_short" {
   }
 }
 
-variable "github" {
-  type = object({
-    org = string
-  })
-  default = { org = "pagopa" }
-}
-
-variable "domain" {
-  type = string
-  validation {
-    condition = (
-      length(var.domain) <= 12
-    )
-    error_message = "Max length is 12 chars."
-  }
-}
-
-variable "location" {
-  type        = string
-  description = "One of westeurope, northeurope"
-}
-
-variable "location_short" {
-  type = string
-  validation {
-    condition = (
-      length(var.location_short) == 3
-    )
-    error_message = "Length must be 3 chars."
-  }
-  description = "One of wue, neu"
-}
-
-variable "location_string" {
-  type        = string
-  description = "One of West Europe, North Europe"
-}
-
-variable "instance" {
-  type        = string
-  description = "One of beta, prod01, prod02"
-}
-
 variable "tags" {
   type = map(any)
   default = {

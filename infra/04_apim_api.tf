@@ -50,7 +50,7 @@ module "api_v1" {
   })
 
   xml_content = templatefile("./policy/_base_policy.xml", {
-    hostname = local.hostname
+    hostname = var.hostname
   })
 }
 
