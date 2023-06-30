@@ -52,9 +52,9 @@ jobs:
 
       - name: Commit files
         run: |
-          git config --local user.email "test@test.com"
-          git config --local user.name "Test"
-          git commit -a -m "Add changes"
+          git config --local user.email "pagopa-github-bot@pagopa.it"
+          git config --local user.name "pagopa-github-bot"
+          git commit -a -m "Formatting"
           git push
 
 
