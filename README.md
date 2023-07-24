@@ -1,7 +1,7 @@
 # Template for Java Spring Microservice project
 
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=TODO-set-your-id&metric=alert_status)](https://sonarcloud.io/dashboard?id=TODO-set-your-id)
-[![Integration Tests](https://github.com/pagopa/<TODO>/actions/workflows/integration_test.yml/badge.svg?branch=main)](https://github.com/pagopa/<TODO>/actions/workflows/integration_test.yml)
+[![Integration Tests](https://github.com/pagopa/<TODO-repo>/actions/workflows/integration_test.yml/badge.svg?branch=main)](https://github.com/pagopa/<TODO-repo>/actions/workflows/integration_test.yml)
 
 TODO: add a description
 
@@ -13,7 +13,7 @@ TODO: resolve all the TODOs in this template
 
 ## Api Documentation 📖
 
-See the [OpenApi 3 here.](TODO: set your url)
+See the [OpenApi 3 here.](https://editor.swagger.io/?url=https://raw.githubusercontent.com/pagopa/<TODO-repo>/main/openapi/openapi.json)
 
 ---
 
