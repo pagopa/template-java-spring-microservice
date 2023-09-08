@@ -125,7 +125,6 @@ jobs:
   deploy_aks_dev:
     name: Deploy on AKS DEV
     needs: [ setup, release, image ]
-    if: ${{ always() && !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled') }}
     uses: ./.github/workflows/deploy_with_github_runner.yml
     with:
       environment: ${{ needs.setup.outputs.environment }}
@@ -134,7 +133,7 @@ jobs:
   deploy_aks_uat:
     name: Deploy on AKS UAT
     needs: [ setup, release, image ]
-    if: ${{ always() && !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled')  && needs.setup.outputs.environment != 'dev' }}
+    if: ${{ needs.setup.outputs.environment != 'dev' }}
     uses: ./.github/workflows/deploy_with_github_runner.yml
     with:
       environment: ${{ needs.setup.outputs.environment }}
@@ -143,14 +142,15 @@ jobs:
   deploy_aks_prod:
     name: Deploy on AKS PROD
     needs: [ setup, release, image ]
-    if: ${{ always() && !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled')  && needs.setup.outputs.environment == 'prod' }}
+    if: ${{ needs.setup.outputs.environment == 'prod' }}
     uses: ./.github/workflows/deploy_with_github_runner.yml
     with:
       environment: ${{ needs.setup.outputs.environment }}
     secrets: inherit
 
+
   notify:
-    needs: [ setup, release, deploy_aks_prod ]
+    needs: [ deploy_aks_prod ]
     runs-on: ubuntu-latest
     name: Notify
     if: always()
@@ -159,7 +159,7 @@ jobs:
         if: ${{ needs.setup.outputs.environment == 'prod' }}
         uses: ravsamhq/notify-slack-action@v2
         with:
-          status: ${{ needs.deploy_aks.result }}
+          status: ${{ needs.deploy_aks_prod.result }}
           token: ${{ secrets.GITHUB_TOKEN }}
           notification_title: 'New Release on Production ${{ needs.release.outputs.version }} has {status_message}'
           message_format: '{emoji} <{run_url}|{workflow}> {status_message} in <{repo_url}|{repo}>'
