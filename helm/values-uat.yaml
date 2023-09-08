@@ -25,11 +25,13 @@ microservice-chart:
   service:
     create: true
     type: ClusterIP
-    port: 8080
+    ports:
+      - 8080
   ingress:
     create: true
     host: "your.host" # TODO: set the host
     path: /your-path-here/(.*) # TODO: set your path
+    servicePort: 8080
   serviceAccount:
     create: false
     annotations: { }
