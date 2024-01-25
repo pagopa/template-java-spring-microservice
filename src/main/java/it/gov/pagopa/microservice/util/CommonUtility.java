@@ -1,14 +1,11 @@
-package it.pagopa.selfcare.pagopa.backoffice.util;
+package it.gov.pagopa.microservice.util;
 
-import it.pagopa.selfcare.pagopa.backoffice.model.SelfCareUser;
-import it.pagopa.selfcare.pagopa.backoffice.model.connector.PageInfo;
-import it.pagopa.selfcare.pagopa.backoffice.model.connector.wrapper.WrapperChannel;
-import it.pagopa.selfcare.pagopa.backoffice.model.connector.wrapper.WrapperChannels;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
-import org.springframework.security.core.Authentication;
 
-import java.util.*;
+import java.util.Calendar;
+import java.util.List;
+import java.util.Optional;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class CommonUtility {
