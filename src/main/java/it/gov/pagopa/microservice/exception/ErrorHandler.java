@@ -1,5 +1,8 @@
 package it.gov.pagopa.microservice.exception;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import feign.FeignException;
 import it.gov.pagopa.microservice.model.ProblemJson;
 import java.util.ArrayList;
 import java.util.List;
@@ -20,6 +23,9 @@ import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * All Exceptions are handled by this class
@@ -27,13 +33,6 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 @ControllerAdvice
 @Slf4j
 public class ErrorHandler extends ResponseEntityExceptionHandler {
-
-
-  public static final String INTERNAL_SERVER_ERROR = "INTERNAL SERVER ERROR";
-  public static final String BAD_REQUEST = "BAD REQUEST";
-  public static final String FOREIGN_KEY_VIOLATION = "23503";
-  public static final int CHILD_RECORD_VIOLATION = 2292;
-
 
   /**
    * Handle if the input request is not a valid JSON
@@ -50,7 +49,7 @@ public class ErrorHandler extends ResponseEntityExceptionHandler {
     log.warn("Input not readable: ", ex);
     var errorResponse = ProblemJson.builder()
         .status(HttpStatus.BAD_REQUEST.value())
-        .title(BAD_REQUEST)
+                        .title(AppError.BAD_REQUEST.getTitle())
         .detail("Invalid input format")
         .build();
     return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
@@ -72,7 +71,7 @@ public class ErrorHandler extends ResponseEntityExceptionHandler {
     log.warn("Missing request parameter: ", ex);
     var errorResponse = ProblemJson.builder()
         .status(HttpStatus.BAD_REQUEST.value())
-        .title(BAD_REQUEST)
+                        .title(AppError.BAD_REQUEST.getTitle())
         .detail(ex.getMessage())
         .build();
     return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
@@ -94,7 +93,7 @@ public class ErrorHandler extends ResponseEntityExceptionHandler {
     log.warn("Type mismatch: ", ex);
     var errorResponse = ProblemJson.builder()
         .status(HttpStatus.BAD_REQUEST.value())
-        .title(BAD_REQUEST)
+                        .title(AppError.BAD_REQUEST.getTitle())
         .detail(String.format("Invalid value %s for property %s", ex.getValue(),
             ((MethodArgumentTypeMismatchException) ex).getName()))
         .build();
@@ -121,7 +120,7 @@ public class ErrorHandler extends ResponseEntityExceptionHandler {
     log.warn("Input not valid: " + detailsMessage);
     var errorResponse = ProblemJson.builder()
         .status(HttpStatus.BAD_REQUEST.value())
-        .title(BAD_REQUEST)
+                        .title(AppError.BAD_REQUEST.getTitle())
         .detail(detailsMessage)
         .build();
     return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
@@ -133,7 +132,7 @@ public class ErrorHandler extends ResponseEntityExceptionHandler {
     log.warn("Validation Error raised:", ex);
     var errorResponse = ProblemJson.builder()
         .status(HttpStatus.BAD_REQUEST.value())
-        .title(BAD_REQUEST)
+                        .title(AppError.BAD_REQUEST.getTitle())
         .detail(ex.getMessage())
         .build();
     return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
@@ -141,51 +140,37 @@ public class ErrorHandler extends ResponseEntityExceptionHandler {
 
 
   /**
-   * @param ex      {@link DataIntegrityViolationException} exception raised when the SQL statement
-   *                cannot be executed
+     * Handle if a {@link FeignException} is raised
+     *
+     * @param ex      {@link FeignException} exception raised
    * @param request from frontend
    * @return a {@link ProblemJson} as response with the cause and with an appropriated HTTP status
    */
-  @ExceptionHandler({DataIntegrityViolationException.class})
-  public ResponseEntity<ProblemJson> handleDataIntegrityViolationException(
-      final DataIntegrityViolationException ex, final WebRequest request) {
-    ProblemJson errorResponse = null;
+    @ExceptionHandler({FeignException.class})
+    public ResponseEntity<ProblemJson> handleFeignException(final FeignException ex, final WebRequest request) {
+        log.warn("FeignException raised: ", ex);
 
-    if (ex.getCause() instanceof ConstraintViolationException) {
-      String sqlState = ((ConstraintViolationException) ex.getCause()).getSQLState();
-      var errorCode = ((ConstraintViolationException) ex.getCause()).getSQLException()
-          .getErrorCode();
-      // check the reason of ConstraintViolationException: is true if the object is referenced by a foreign key
-      // more info: https://docs.oracle.com/javadb/10.8.3.0/ref/rrefexcept71493.html
-      if (sqlState.equals(FOREIGN_KEY_VIOLATION)) {
-        log.warn("Can't delete from Database", ex);
-        errorResponse = ProblemJson.builder()
-            .status(HttpStatus.CONFLICT.value())
-            .title("Conflict with the current state of the resource")
-            .detail("There is a relation with other resource. Delete it first.")
+        ProblemJson problem;
+        if(ex.responseBody().isPresent()) {
+            var body = new String(ex.responseBody().get().array(), StandardCharsets.UTF_8);
+            try {
+                problem = new ObjectMapper().readValue(body, ProblemJson.class);
+            } catch (JsonProcessingException e) {
+                problem = ProblemJson.builder()
+                        .status(HttpStatus.BAD_GATEWAY.value())
+                        .title(AppError.RESPONSE_NOT_READABLE.getTitle())
+                        .detail(AppError.RESPONSE_NOT_READABLE.getDetails())
             .build();
       }
-      if (errorCode == CHILD_RECORD_VIOLATION) {
-        log.warn("Can't update the Database", ex);
-        errorResponse = ProblemJson.builder()
-            .status(HttpStatus.CONFLICT.value())
-            .title("Conflict with the current state of the resource")
-            .detail("There is a relation with other resource. Delete it first.")
-            .build();
-      }
-    }
-
-    // default response
-    if (errorResponse == null) {
-      log.warn("Data Integrity Violation", ex);
-      errorResponse = ProblemJson.builder()
-          .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
-          .title(INTERNAL_SERVER_ERROR)
-          .detail(ex.getMessage())
+        } else {
+            problem = ProblemJson.builder()
+                    .status(HttpStatus.BAD_GATEWAY.value())
+                    .title("No Response Body")
+                    .detail("Error with external dependency")
           .build();
     }
 
-    return new ResponseEntity<>(errorResponse, HttpStatus.valueOf(errorResponse.getStatus()));
+        return new ResponseEntity<>(problem, HttpStatus.valueOf(problem.getStatus()));
   }
 
 
@@ -203,8 +188,7 @@ public class ErrorHandler extends ResponseEntityExceptionHandler {
       log.warn("App Exception raised: " + ex.getMessage() + "\nCause of the App Exception: ",
           ex.getCause());
     } else {
-      log.warn("App Exception raised: {}", ex.getMessage());
-      log.debug("Trace error: ", ex);
+            log.warn("App Exception raised: ", ex);
     }
     var errorResponse = ProblemJson.builder()
         .status(ex.getHttpStatus().value())
@@ -228,7 +212,7 @@ public class ErrorHandler extends ResponseEntityExceptionHandler {
     log.error("Generic Exception raised:", ex);
     var errorResponse = ProblemJson.builder()
         .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
-        .title(INTERNAL_SERVER_ERROR)
+                        .title(AppError.INTERNAL_SERVER_ERROR.getTitle())
         .detail(ex.getMessage())
         .build();
     return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);

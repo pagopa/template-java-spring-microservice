@@ -44,8 +44,7 @@ public class AppException extends RuntimeException {
    * @param title      title returned to the response when this exception occurred
    * @param message    the detail message returend to the response
    */
-  public AppException(@NotNull HttpStatus httpStatus, @NotNull String title,
-      @NotNull String message) {
+  public AppException(@NotNull HttpStatus httpStatus, @NotNull String title, @NotNull String message) {
     super(message);
     this.title = title;
     this.httpStatus = httpStatus;
