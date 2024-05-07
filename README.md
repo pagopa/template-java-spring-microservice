@@ -91,6 +91,6 @@ install [k6](https://k6.io/) and then from `./performance-test/src`
 
 Made with ❤️ by PagoPa S.p.A.
 
-### Mainteiners
+### Maintainers
 
 See `CODEOWNERS` file
