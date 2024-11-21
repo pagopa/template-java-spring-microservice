@@ -7,9 +7,36 @@ on:
         required: true
         description: The name of the environment where to deploy
         type: string
+      helm_options:
+        default: ''
+        required: false
+        type: string
+        description: 'helm upgrade options'
+      terraform_options:
+        default: ''
+        required: false
+        type: string
+        description: 'terraform upgrade options'
+      branch:
+        required: false
+        default: ${{ github.ref_name }}
+        type: string
+      suffix_name:
+        required: false
+        default: ''
+        type: string
+      pr_number:
+        required: false
+        default: ''
+        type: string
+      uninstall:
+        description: 'true if you want to uninstall instead of install'
+        required: false
+        type: boolean
+        default: false
 
 env:
-  APP_NAME: # TODO
+  APP_NAME: pagopaselfcaremsbackofficebackend
 
 
 permissions:
@@ -36,7 +63,7 @@ jobs:
           container_app_environment_name: ${{ vars.CONTAINER_APP_ENVIRONMENT_NAME }}
           resource_group_name: ${{ vars.CONTAINER_APP_ENVIRONMENT_RESOURCE_GROUP_NAME }} # RG of the runner
           pat_token: ${{ secrets.BOT_TOKEN_GITHUB }}
-          self_hosted_runner_image_tag: "v3.0.0"
+          self_hosted_runner_image_tag: "latest"
 
   deploy:
     needs: [ create_runner ]
@@ -45,9 +72,10 @@ jobs:
     environment: ${{ inputs.environment }}
     steps:
       - name: Deploy
+        if: ${{ inputs.uninstall  == 'false' ||  inputs.uninstall  == false }}
         uses: pagopa/github-actions-template/aks-deploy@main
         with:
-          branch: ${{ github.ref_name }}
+          branch: ${{ inputs.branch }}
           client_id: ${{ secrets.CLIENT_ID }}
           subscription_id: ${{ secrets.SUBSCRIPTION_ID }}
           tenant_id: ${{ secrets.TENANT_ID }}
@@ -55,8 +83,15 @@ jobs:
           namespace: ${{ vars.NAMESPACE }}
           cluster_name: ${{ vars.CLUSTER_NAME }}
           resource_group: ${{ vars.CLUSTER_RESOURCE_GROUP }}
-          app_name: ${{ env.APP_NAME }}
-          helm_upgrade_options: "--debug"
+          app_name: ${{ env.APP_NAME }}${{inputs.suffix_name}}
+          helm_upgrade_options: "--debug ${{inputs.helm_options}}"
+          timeout: '10m0s'
+
+      - name: Remove deployment
+        if: ${{ inputs.uninstall == 'true' ||  inputs.uninstall  == true}}
+        shell: bash
+        run: |
+          helm uninstall ${{ env.APP_NAME }}${{inputs.suffix_name}} -n ${{ vars.NAMESPACE }}
 
   cleanup_runner:
     name: Cleanup Runner
@@ -68,7 +103,7 @@ jobs:
       - name: Cleanup GitHub Runner
         id: cleanup_github_runner
         # from https://github.com/pagopa/eng-github-actions-iac-template/tree/main/azure/github-self-hosted-runner-azure-cleanup-action
-        uses: pagopa/eng-github-actions-iac-template/azure/github-self-hosted-runner-azure-cleanup-action@0ee2f58fd46d10ac7f00bce4304b98db3dbdbe9a
+        uses: pagopa/eng-github-actions-iac-template/azure/github-self-hosted-runner-azure-cleanup-action@main
         with:
           client_id: ${{ secrets.CLIENT_ID }}
           tenant_id: ${{ secrets.TENANT_ID }}
@@ -87,8 +122,12 @@ jobs:
         id: checkout
         # from https://github.com/actions/checkout/commits/main
         uses: actions/checkout@1f9a0c22da41e6ebfa534300ef656657ea2c6707
-        with:
-          persist-credentials: false
+
+      - shell: bash
+        if: ${{ inputs.pr_number != '' }}
+        run: |
+          mv ./infra/04_apim_api_staging.tf.disabled ./infra/04_apim_api_staging.tf 
+          echo "pr_number=\"${{ inputs.pr_number }}\"" >> ./infra/env/dev/terraform.tfvars
 
       - name: Setup Terraform
         # from https://github.com/hashicorp/setup-terraform/commits/main
@@ -115,5 +154,5 @@ jobs:
           export ARM_TENANT_ID=$(az account show --query tenantId --output tsv)
           export ARM_USE_OIDC=true
           export ARM_ACCESS_KEY=$(az storage account keys list --resource-group io-infra-rg --account-name pagopainfraterraform${{inputs.environment}} --query '[0].value' -o tsv)
-          bash ./terraform.sh init weu-${{ inputs.environment }}
-          bash ./terraform.sh apply weu-${{ inputs.environment }} -auto-approve
+          bash ./terraform.sh init ${{ inputs.environment }}
+          bash ./terraform.sh apply ${{ inputs.environment }} ${{inputs.terraform_options}} -auto-approve
