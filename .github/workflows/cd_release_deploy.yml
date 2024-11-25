@@ -1,4 +1,4 @@
-name: Manual Release And Deploy
+name: Release And Deploy
 
 # Controls when the workflow will run
 on:
@@ -138,7 +138,7 @@ jobs:
     name: Deploy on AKS
     needs: [ setup, release, image ]
     if: ${{ always() && !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled') }}
-    uses: ./.github/workflows/deploy_with_github_runner.yml
+    uses: ./.github/workflows/cd_deploy_with_github_runner.yml
     with:
       environment: ${{ needs.setup.outputs.environment }}
     secrets: inherit
