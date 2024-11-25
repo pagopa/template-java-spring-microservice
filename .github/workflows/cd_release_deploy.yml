@@ -98,7 +98,6 @@ jobs:
         name: Set Output
         run: echo "environment=${{env.ENVIRNOMENT}}" >> $GITHUB_OUTPUT
 
-
   release:
     name: Create a New Release
     runs-on: ubuntu-latest
@@ -107,9 +106,6 @@ jobs:
     outputs:
       version: ${{ steps.release.outputs.version }}
     steps:
-      - uses: axel-op/googlejavaformat-action@v3
-        with:
-          args: "--replace"
       - name: Make Release
         id: release
         uses: pagopa/github-actions-template/maven-release@4a4c25ce28feeec9e619b3132b5327f52023d441 # v1.14.2
@@ -118,8 +114,8 @@ jobs:
           github_token: ${{ secrets.BOT_TOKEN_GITHUB }}
           beta: ${{ inputs.beta }}
           skip_ci: true
-          prerelease: ${{ needs.setup.outputs.environment != 'prod' }}
-          only_tag: ${{ needs.setup.outputs.environment == 'dev' }}
+          prerelease: ${{  github.ref_name != 'main' }}
+          only_tag: false
 
   image:
     needs: [ setup, release ]
@@ -160,4 +156,4 @@ jobs:
           footer: 'Linked to <{workflow_url}| workflow file>'
           icon_success: ':white_check_mark:'
         env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL_DEPLOY }}

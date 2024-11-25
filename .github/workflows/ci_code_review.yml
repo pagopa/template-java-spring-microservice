@@ -44,6 +44,11 @@ jobs:
           cpd_exclusions: "**/model/**,**/entity/*"
           java_version: 17
 
+      - name: suggester / junit
+        uses: reviewdog/action-suggester@v1
+        with:
+          tool_name: junit
+
   smoke_test:
     name: Smoke Test
     if: github.event_name == 'pull_request' || github.event_name == 'merge_group'
