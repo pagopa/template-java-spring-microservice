@@ -19,8 +19,8 @@ See the [OpenApi 3 here.](https://editor.swagger.io/?url=https://raw.githubuserc
 
 ## Technology Stack
 
-- Java 11
-- Spring Boot
+- Java 17
+- Spring Boot 3
 - Spring Web
 - Hibernate
 - JPA
@@ -51,13 +51,13 @@ from `./docker` directory
 
 - git
 - maven
-- jdk-11
+- jdk-17
 
 ### Run the project
 
 Start the springboot application with this command:
 
-`mvn spring-boot:run -Dspring-boot.run.profiles=local`
+`mvn spring-boot:run -Dspring.profiles.active=local`
 
 ### Spring Profiles
 

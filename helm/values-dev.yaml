@@ -66,6 +66,8 @@ microservice-chart:
           type: Utilization # Allowed types are 'Utilization' or 'AverageValue'
           value: "75"
   envConfig:
+    APP_NAME: "yourProjectName" # TODO
+    APP_ENVIRONMENT: "dev"
     # TODO: set your name
     WEBSITE_SITE_NAME: 'yourProjectName' # required to show cloud role name in application insights
     ENV: 'azure-dev'
@@ -82,7 +84,7 @@ microservice-chart:
     OTEL_TRACES_SAMPLER: "always_on"
   envSecret:
     # required
-    APPLICATIONINSIGHTS_CONNECTION_STRING: 'ai-d-connection-string'
+    APPLICATIONINSIGHTS_CONNECTION_STRING: 'app-insight-connection-string'
     OTEL_EXPORTER_OTLP_HEADERS: elastic-apm-secret-token
   keyvault:
     name: "pagopa-d-name-kv" #TODO

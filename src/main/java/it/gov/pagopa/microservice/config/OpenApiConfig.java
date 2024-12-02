@@ -11,11 +11,15 @@ import io.swagger.v3.oas.models.media.StringSchema;
 import io.swagger.v3.oas.models.parameters.Parameter;
 import io.swagger.v3.oas.models.responses.ApiResponses;
 import io.swagger.v3.oas.models.security.SecurityScheme;
+import io.swagger.v3.oas.models.servers.Server;
+import io.swagger.v3.oas.models.servers.ServerVariable;
+import io.swagger.v3.oas.models.servers.ServerVariables;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import org.springdoc.core.customizers.OpenApiCustomiser;
+import org.springdoc.core.customizers.GlobalOpenApiCustomizer;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -29,6 +33,22 @@ public class OpenApiConfig {
       @Value("${info.application.description}") String appDescription,
       @Value("${info.application.version}") String appVersion) {
     return new OpenAPI()
+        .servers(
+            List.of(
+                new Server().url("http://localhost:8080"),
+                new Server()
+                    .url("https://{host}{basePath}")
+                    .variables(
+                        new ServerVariables()
+                            .addServerVariable(
+                                "host",
+                                new ServerVariable()
+                                    ._enum(List.of("dev", "uat", "prod")) // TODO: set server hosts
+                                    ._default("")) // TODO: set default server host
+                            .addServerVariable(
+                                "basePath",
+                                new ServerVariable()._default("")) // TODO: set app base path
+                        )))
         .components(
             new Components()
                 .addSecuritySchemes(
@@ -47,13 +67,10 @@ public class OpenApiConfig {
   }
 
   @Bean
-  public OpenApiCustomiser sortOperationsAlphabetically() {
+  public GlobalOpenApiCustomizer sortOperationsAlphabetically() {
     return openApi -> {
       Paths paths =
-          openApi
-              .getPaths()
-              .entrySet()
-              .stream()
+          openApi.getPaths().entrySet().stream()
               .sorted(Map.Entry.comparingByKey())
               .collect(
                   Paths::new,
@@ -67,10 +84,7 @@ public class OpenApiConfig {
                   .forEach(
                       operation -> {
                         var responses =
-                            operation
-                                .getResponses()
-                                .entrySet()
-                                .stream()
+                            operation.getResponses().entrySet().stream()
                                 .sorted(Map.Entry.comparingByKey())
                                 .collect(
                                     ApiResponses::new,
@@ -84,7 +98,7 @@ public class OpenApiConfig {
   }
 
   @Bean
-  public OpenApiCustomiser addCommonHeaders() {
+  public GlobalOpenApiCustomizer addCommonHeaders() {
     return openApi ->
         openApi
             .getPaths()
@@ -105,7 +119,8 @@ public class OpenApiConfig {
                             .name(HEADER_REQUEST_ID)
                             .schema(new StringSchema())
                             .description(
-                                "This header identifies the call, if not passed it is self-generated. This ID is returned in the response."));
+                                "This header identifies the call, if not passed it is"
+                                    + " self-generated. This ID is returned in the response."));
                   }
 
                   // add Request-ID as response header
