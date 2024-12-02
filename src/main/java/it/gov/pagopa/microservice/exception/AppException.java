@@ -1,7 +1,8 @@
 package it.gov.pagopa.microservice.exception;
 
 import java.util.Formatter;
-import javax.validation.constraints.NotNull;
+
+import jakarta.validation.constraints.NotNull;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 import org.springframework.http.HttpStatus;
@@ -33,7 +34,7 @@ public class AppException extends RuntimeException {
    * @param cause      The cause of this {@link AppException}
    */
   public AppException(@NotNull HttpStatus httpStatus, @NotNull String title,
-      @NotNull String message, Throwable cause) {
+                      @NotNull String message, Throwable cause) {
     super(message, cause);
     this.title = title;
     this.httpStatus = httpStatus;
