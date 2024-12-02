@@ -140,17 +140,53 @@ public class ErrorHandler extends ResponseEntityExceptionHandler {
                 .build();
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
+    var detailsMessage = String.join(", ", details);
+    log.warn("Input not valid: " + detailsMessage);
+    var errorResponse =
+        ProblemJson.builder()
+            .status(HttpStatus.BAD_REQUEST.value())
+            .title(AppError.BAD_REQUEST.getTitle())
+            .detail(detailsMessage)
+            .build();
+    return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+  }
 
-    @ExceptionHandler({jakarta.validation.ConstraintViolationException.class})
-    public ResponseEntity<ProblemJson> handleConstraintViolationException(
-            final jakarta.validation.ConstraintViolationException ex,
-            final WebRequest request
-    ) {
-        log.warn("Validation Error raised:", ex);
-        var errorResponse = ProblemJson.builder()
-                .status(HttpStatus.BAD_REQUEST.value())
-                .title(AppError.BAD_REQUEST.getTitle())
-                .detail(ex.getMessage())
+  @ExceptionHandler({jakarta.validation.ConstraintViolationException.class})
+  public ResponseEntity<ProblemJson> handleConstraintViolationException(
+      final jakarta.validation.ConstraintViolationException ex, final WebRequest request) {
+    log.warn("Validation Error raised:", ex);
+    var errorResponse =
+        ProblemJson.builder()
+            .status(HttpStatus.BAD_REQUEST.value())
+            .title(AppError.BAD_REQUEST.getTitle())
+            .detail(ex.getMessage())
+            .build();
+    return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+  }
+
+  /**
+   * Handle if a {@link FeignException} is raised
+   *
+   * @param ex {@link FeignException} exception raised
+   * @param request from frontend
+   * @return a {@link ProblemJson} as response with the cause and with an appropriated HTTP status
+   */
+  @ExceptionHandler({FeignException.class})
+  public ResponseEntity<ProblemJson> handleFeignException(
+      final FeignException ex, final WebRequest request) {
+    log.warn("FeignException raised: ", ex);
+
+    ProblemJson problem;
+    if (ex.responseBody().isPresent()) {
+      var body = new String(ex.responseBody().get().array(), StandardCharsets.UTF_8);
+      try {
+        problem = new ObjectMapper().readValue(body, ProblemJson.class);
+      } catch (JsonProcessingException e) {
+        problem =
+            ProblemJson.builder()
+                .status(HttpStatus.BAD_GATEWAY.value())
+                .title(AppError.RESPONSE_NOT_READABLE.getTitle())
+                .detail(AppError.RESPONSE_NOT_READABLE.getDetails())
                 .build();
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
