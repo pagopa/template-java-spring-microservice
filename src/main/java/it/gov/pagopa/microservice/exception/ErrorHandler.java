@@ -108,7 +108,14 @@ public class ErrorHandler extends ResponseEntityExceptionHandler {
                 .detail(String.format("Invalid value %s for property %s", ex.getValue(),
                         ((MethodArgumentTypeMismatchException) ex).getName()))
                 .build();
-        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+      }
+    } else {
+      problem =
+          ProblemJson.builder()
+              .status(HttpStatus.BAD_GATEWAY.value())
+              .title("No Response Body")
+              .detail("Error with external dependency")
+              .build();
     }
 
     /**
