@@ -13,7 +13,8 @@ import lombok.ToString;
 
 /**
  * Object returned as response in case of an error.
- * <p> See {@link it.gov.pagopa.microservice.exception.ErrorHandler}
+ *
+ * <p>See {@link it.gov.pagopa.microservice.exception.ErrorHandler}
  */
 @Data
 @Builder(toBuilder = true)
