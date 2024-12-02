@@ -1,5 +1,7 @@
 package it.gov.pagopa.microservice.config;
 
+import static it.gov.pagopa.microservice.util.CommonUtility.deNull;
+
 import it.gov.pagopa.microservice.exception.AppError;
 import it.gov.pagopa.microservice.model.ProblemJson;
 import jakarta.annotation.PostConstruct;
