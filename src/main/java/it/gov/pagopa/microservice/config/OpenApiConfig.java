@@ -66,67 +66,62 @@ public class OpenApiConfig {
                 .termsOfService("https://www.pagopa.gov.it/"));
   }
 
-    @Bean
-    public GlobalOpenApiCustomizer sortOperationsAlphabetically() {
-        return openApi -> {
-            Paths paths =
-                    openApi
-                            .getPaths()
-                            .entrySet()
-                            .stream()
-                            .sorted(Map.Entry.comparingByKey())
-                            .collect(
-                                    Paths::new,
-                                    (map, item) -> map.addPathItem(item.getKey(), item.getValue()),
-                                    Paths::putAll);
+  @Bean
+  public GlobalOpenApiCustomizer sortOperationsAlphabetically() {
+    return openApi -> {
+      Paths paths =
+          openApi.getPaths().entrySet().stream()
+              .sorted(Map.Entry.comparingByKey())
+              .collect(
+                  Paths::new,
+                  (map, item) -> map.addPathItem(item.getKey(), item.getValue()),
+                  Paths::putAll);
 
-            paths.forEach(
-                    (key, value) ->
-                            value
-                                    .readOperations()
-                                    .forEach(
-                                            operation -> {
-                                                var responses =
-                                                        operation
-                                                                .getResponses()
-                                                                .entrySet()
-                                                                .stream()
-                                                                .sorted(Map.Entry.comparingByKey())
-                                                                .collect(
-                                                                        ApiResponses::new,
-                                                                        (map, item) ->
-                                                                                map.addApiResponse(item.getKey(), item.getValue()),
-                                                                        ApiResponses::putAll);
-                                                operation.setResponses(responses);
-                                            }));
-            openApi.setPaths(paths);
-        };
-    }
+      paths.forEach(
+          (key, value) ->
+              value
+                  .readOperations()
+                  .forEach(
+                      operation -> {
+                        var responses =
+                            operation.getResponses().entrySet().stream()
+                                .sorted(Map.Entry.comparingByKey())
+                                .collect(
+                                    ApiResponses::new,
+                                    (map, item) ->
+                                        map.addApiResponse(item.getKey(), item.getValue()),
+                                    ApiResponses::putAll);
+                        operation.setResponses(responses);
+                      }));
+      openApi.setPaths(paths);
+    };
+  }
 
-    @Bean
-    public GlobalOpenApiCustomizer addCommonHeaders() {
-        return openApi ->
-                openApi
-                        .getPaths()
-                        .forEach(
-                                (key, value) -> {
+  @Bean
+  public GlobalOpenApiCustomizer addCommonHeaders() {
+    return openApi ->
+        openApi
+            .getPaths()
+            .forEach(
+                (key, value) -> {
 
-                                    // add Request-ID as request header
-                                    var header =
-                                            Optional.ofNullable(value.getParameters())
-                                                    .orElse(Collections.emptyList())
-                                                    .parallelStream()
-                                                    .filter(Objects::nonNull)
-                                                    .anyMatch(elem -> HEADER_REQUEST_ID.equals(elem.getName()));
-                                    if (!header) {
-                                        value.addParametersItem(
-                                                new Parameter()
-                                                        .in("header")
-                                                        .name(HEADER_REQUEST_ID)
-                                                        .schema(new StringSchema())
-                                                        .description(
-                                                                "This header identifies the call, if not passed it is self-generated. This ID is returned in the response."));
-                                    }
+                  // add Request-ID as request header
+                  var header =
+                      Optional.ofNullable(value.getParameters())
+                          .orElse(Collections.emptyList())
+                          .parallelStream()
+                          .filter(Objects::nonNull)
+                          .anyMatch(elem -> HEADER_REQUEST_ID.equals(elem.getName()));
+                  if (!header) {
+                    value.addParametersItem(
+                        new Parameter()
+                            .in("header")
+                            .name(HEADER_REQUEST_ID)
+                            .schema(new StringSchema())
+                            .description(
+                                "This header identifies the call, if not passed it is"
+                                    + " self-generated. This ID is returned in the response."));
+                  }
 
                                     // add Request-ID as response header
                                     value
