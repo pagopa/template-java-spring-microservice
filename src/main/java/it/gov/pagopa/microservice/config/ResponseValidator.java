@@ -24,7 +24,7 @@ public class ResponseValidator {
    * This method validates the response annotated with the {@link jakarta.validation.constraints}
    *
    * @param joinPoint not used
-   * @param result    the response to validate
+   * @param result the response to validate
    */
   // TODO: set your package
   @AfterReturning(pointcut = "execution(* it.gov.pagopa.microservice.controller.*.*(..))", returning = "result")
