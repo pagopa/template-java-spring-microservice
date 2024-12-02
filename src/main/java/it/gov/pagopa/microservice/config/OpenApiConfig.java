@@ -123,22 +123,22 @@ public class OpenApiConfig {
                                     + " self-generated. This ID is returned in the response."));
                   }
 
-                                    // add Request-ID as response header
-                                    value
-                                            .readOperations()
-                                            .forEach(
-                                                    operation ->
-                                                            operation
-                                                                    .getResponses()
-                                                                    .values()
-                                                                    .forEach(
-                                                                            response ->
-                                                                                    response.addHeaderObject(
-                                                                                            HEADER_REQUEST_ID,
-                                                                                            new Header()
-                                                                                                    .schema(new StringSchema())
-                                                                                                    .description(
-                                                                                                            "This header identifies the call"))));
-                                });
-    }
+                  // add Request-ID as response header
+                  value
+                      .readOperations()
+                      .forEach(
+                          operation ->
+                              operation
+                                  .getResponses()
+                                  .values()
+                                  .forEach(
+                                      response ->
+                                          response.addHeaderObject(
+                                              HEADER_REQUEST_ID,
+                                              new Header()
+                                                  .schema(new StringSchema())
+                                                  .description(
+                                                      "This header identifies the call"))));
+                });
+  }
 }
