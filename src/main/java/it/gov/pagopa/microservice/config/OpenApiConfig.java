@@ -1,5 +1,7 @@
 package it.gov.pagopa.microservice.config;
 
+import static it.gov.pagopa.microservice.util.Constants.HEADER_REQUEST_ID;
+
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.Paths;
@@ -12,53 +14,57 @@ import io.swagger.v3.oas.models.security.SecurityScheme;
 import io.swagger.v3.oas.models.servers.Server;
 import io.swagger.v3.oas.models.servers.ServerVariable;
 import io.swagger.v3.oas.models.servers.ServerVariables;
-import org.springdoc.core.customizers.GlobalOpenApiCustomizer;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-
-import static it.gov.pagopa.microservice.util.Constants.HEADER_REQUEST_ID;
+import org.springdoc.core.customizers.GlobalOpenApiCustomizer;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class OpenApiConfig {
 
-    @Bean
-    public OpenAPI customOpenAPI(
-            @Value("${info.application.artifactId}") String appName,
-            @Value("${info.application.description}") String appDescription,
-            @Value("${info.application.version}") String appVersion
-    ) {
-        return new OpenAPI()
-                .servers(List.of(new Server().url("http://localhost:8080"),
-                        new Server().url("https://{host}{basePath}")
-                                .variables(new ServerVariables()
-                                        .addServerVariable("host",
-                                                new ServerVariable()._enum(List.of("dev", "uat", "prod")) // TODO: set server hosts
-                                                        ._default("")) // TODO: set default server host
-                                        .addServerVariable("basePath", new ServerVariable()._default("")) // TODO: set app base path
-                                )))
-                .components(
-                        new Components()
-                                .addSecuritySchemes(
-                                        "ApiKey",
-                                        new SecurityScheme()
-                                                .type(SecurityScheme.Type.APIKEY)
-                                                .description("The API key to access this function app.")
-                                                .name("Ocp-Apim-Subscription-Key")
-                                                .in(SecurityScheme.In.HEADER)))
-                .info(
-                        new Info()
-                                .title(appName)
-                                .version(appVersion)
-                                .description(appDescription)
-                                .termsOfService("https://www.pagopa.gov.it/"));
-    }
+  @Bean
+  public OpenAPI customOpenAPI(
+      @Value("${info.application.artifactId}") String appName,
+      @Value("${info.application.description}") String appDescription,
+      @Value("${info.application.version}") String appVersion) {
+    return new OpenAPI()
+        .servers(
+            List.of(
+                new Server().url("http://localhost:8080"),
+                new Server()
+                    .url("https://{host}{basePath}")
+                    .variables(
+                        new ServerVariables()
+                            .addServerVariable(
+                                "host",
+                                new ServerVariable()
+                                    ._enum(List.of("dev", "uat", "prod")) // TODO: set server hosts
+                                    ._default("")) // TODO: set default server host
+                            .addServerVariable(
+                                "basePath",
+                                new ServerVariable()._default("")) // TODO: set app base path
+                        )))
+        .components(
+            new Components()
+                .addSecuritySchemes(
+                    "ApiKey",
+                    new SecurityScheme()
+                        .type(SecurityScheme.Type.APIKEY)
+                        .description("The API key to access this function app.")
+                        .name("Ocp-Apim-Subscription-Key")
+                        .in(SecurityScheme.In.HEADER)))
+        .info(
+            new Info()
+                .title(appName)
+                .version(appVersion)
+                .description(appDescription)
+                .termsOfService("https://www.pagopa.gov.it/"));
+  }
 
     @Bean
     public GlobalOpenApiCustomizer sortOperationsAlphabetically() {
