@@ -68,10 +68,7 @@ jobs:
         uses: reviewdog/action-suggester@v1
         with:
           tool_name: google-java-format
-      - name: Check Format
-        uses: axel-op/googlejavaformat-action@v3
-        with:
-          args: "--set-exit-if-changed"
+          fail_on_error: true
 
   check_size:
     runs-on: ubuntu-latest

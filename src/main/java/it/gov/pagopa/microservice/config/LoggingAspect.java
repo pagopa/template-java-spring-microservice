@@ -53,6 +53,38 @@ public class LoggingAspect {
   @Value("${info.properties.environment}")
   private String environment;
 
+  private static String getDetail(ResponseEntity<ProblemJson> result) {
+    if (result != null && result.getBody() != null && result.getBody().getDetail() != null) {
+      return result.getBody().getDetail();
+    } else return AppError.UNKNOWN.getDetails();
+  }
+
+  private static String getTitle(ResponseEntity<ProblemJson> result) {
+    if (result != null && result.getBody() != null && result.getBody().getTitle() != null) {
+      return result.getBody().getTitle();
+    } else return AppError.UNKNOWN.getTitle();
+  }
+
+  public static String getExecutionTime() {
+    String startTime = MDC.get(START_TIME);
+    if (startTime != null) {
+      long endTime = System.currentTimeMillis();
+      long executionTime = endTime - Long.parseLong(startTime);
+      return String.valueOf(executionTime);
+    }
+    return "-";
+  }
+
+  private static Map<String, String> getParams(ProceedingJoinPoint joinPoint) {
+    CodeSignature codeSignature = (CodeSignature) joinPoint.getSignature();
+    Map<String, String> params = new HashMap<>();
+    int i = 0;
+    for (var paramName : codeSignature.getParameterNames()) {
+      params.put(paramName, deNull(joinPoint.getArgs()[i++]));
+    }
+    return params;
+  }
+
   @Pointcut("@within(org.springframework.web.bind.annotation.RestController)")
   public void restController() {
     // all rest controllers
@@ -120,37 +152,5 @@ public class LoggingAspect {
     Object result = joinPoint.proceed();
     log.debug("Return method {} - result: {}", joinPoint.getSignature().toShortString(), result);
     return result;
-  }
-
-  private static String getDetail(ResponseEntity<ProblemJson> result) {
-    if (result != null && result.getBody() != null && result.getBody().getDetail() != null) {
-      return result.getBody().getDetail();
-    } else return AppError.UNKNOWN.getDetails();
-  }
-
-  private static String getTitle(ResponseEntity<ProblemJson> result) {
-    if (result != null && result.getBody() != null && result.getBody().getTitle() != null) {
-      return result.getBody().getTitle();
-    } else return AppError.UNKNOWN.getTitle();
-  }
-
-  public static String getExecutionTime() {
-    String startTime = MDC.get(START_TIME);
-    if (startTime != null) {
-      long endTime = System.currentTimeMillis();
-      long executionTime = endTime - Long.parseLong(startTime);
-      return String.valueOf(executionTime);
-    }
-    return "-";
-  }
-
-  private static Map<String, String> getParams(ProceedingJoinPoint joinPoint) {
-    CodeSignature codeSignature = (CodeSignature) joinPoint.getSignature();
-    Map<String, String> params = new HashMap<>();
-    int i = 0;
-    for (var paramName : codeSignature.getParameterNames()) {
-      params.put(paramName, deNull(joinPoint.getArgs()[i++]));
-    }
-    return params;
   }
 }

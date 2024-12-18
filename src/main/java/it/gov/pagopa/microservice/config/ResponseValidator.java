@@ -3,6 +3,7 @@ package it.gov.pagopa.microservice.config;
 import it.gov.pagopa.microservice.exception.AppException;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validator;
+import java.util.Set;
 import org.apache.commons.lang3.StringUtils;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.AfterReturning;
@@ -16,9 +17,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class ResponseValidator {
 
-  @Autowired
-  private Validator validator;
-
+  @Autowired private Validator validator;
 
   /**
    * This method validates the response annotated with the {@link jakarta.validation.constraints}
