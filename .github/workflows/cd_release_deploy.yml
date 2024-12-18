@@ -84,6 +84,7 @@ jobs:
 
       - if: ${{ inputs.version == 'skip_or_promote' }}
         run: echo "SEMVER=skip" >> $GITHUB_ENV
+
       - id: get_semver
         name: Set Output
         run: echo "semver=${{env.SEMVER}}" >> $GITHUB_OUTPUT
@@ -108,7 +109,7 @@ jobs:
     steps:
       - name: Make Release
         id: release
-        uses: pagopa/github-actions-template/maven-release@4a4c25ce28feeec9e619b3132b5327f52023d441 # v1.14.2
+        uses: pagopa/github-actions-template/maven-release@38203c7599bcac41a743237ccb17c733ff9c2eee # v1.12.0
         with:
           semver: ${{ needs.setup.outputs.semver }}
           github_token: ${{ secrets.BOT_TOKEN_GITHUB }}
@@ -156,4 +157,4 @@ jobs:
           footer: 'Linked to <{workflow_url}| workflow file>'
           icon_success: ':white_check_mark:'
         env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL_DEPLOY }}
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
