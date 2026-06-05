@@ -5,6 +5,8 @@ on:
   merge_group:
     branches: [ main ]
   pull_request:
+    branches:
+      - main
     types: [ closed ]
 
   # Allows you to run this workflow manually from the Actions tab
@@ -33,6 +35,16 @@ on:
           - skip_or_promote
           - new_release
           - breaking_change
+      is_canary:
+        type: boolean
+        description: 'Mark the release as canary on AKS'
+        default: false
+      traffic_weight:
+        required: false
+        type: number
+        default: 0
+        description: 'The percentage of traffic to be sent to the canary version'
+
 
 permissions:
   packages: write
@@ -113,10 +125,8 @@ jobs:
         with:
           semver: ${{ needs.setup.outputs.semver }}
           github_token: ${{ secrets.BOT_TOKEN_GITHUB }}
-          beta: ${{ inputs.beta }}
-          skip_ci: true
-          prerelease: ${{  github.ref_name != 'main' }}
-          only_tag: false
+          beta: ${{ inputs.is_canary }}
+          skip_ci: false
 
   image:
     needs: [ setup, release ]
@@ -128,16 +138,19 @@ jobs:
         id: semver
         uses: pagopa/github-actions-template/ghcr-build-push@d91a1fd0b913c9830589be5d86cdb71c90813fae # v1.5.4
         with:
+          branch: ${{ github.ref_name}}
           github_token: ${{ secrets.GITHUB_TOKEN }}
           tag: ${{ needs.release.outputs.version }}
 
   deploy_aks:
-    name: Deploy on AKS
+    name: Deploy on AKS ${{needs.setup.outputs.environment}}
     needs: [ setup, release, image ]
     if: ${{ always() && !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled') }}
     uses: ./.github/workflows/cd_deploy_with_github_runner.yml
     with:
       environment: ${{ needs.setup.outputs.environment }}
+      suffix_name: ${{ inputs.is_canary && '-canary' || '' }}
+      is_canary: ${{ inputs.is_canary }}
     secrets: inherit
 
   notify:
@@ -157,4 +170,4 @@ jobs:
           footer: 'Linked to <{workflow_url}| workflow file>'
           icon_success: ':white_check_mark:'
         env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL_DEPLOY }}
